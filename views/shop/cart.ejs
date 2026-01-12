@@ -22,7 +22,7 @@
                             <p class="product__quantity">Quantity <%= p.CartItem.quantity %></p>
                         </div>
                         <div class="card__actions">
-                            <form action="/cart/delete-product/<%= p.id %>" method="POST">
+                            <form action="/cart/delete-product/<%= p._id %>" method="POST">
                                 <button type="submit" class="btn">Delete</button>
                             </form>
                         </div>
