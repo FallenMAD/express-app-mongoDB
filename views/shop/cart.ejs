@@ -19,7 +19,7 @@
                         <div class="card__content">
                             <h2 class="product__price">$<%= p.price %></h2>
                             <p class="product__description"><%= p.description %></p>
-                            <p class="product__quantity">Quantity <%= p.CartItem.quantity %></p>
+                            <p class="product__quantity">Quantity <%= p.quantity %></p>
                         </div>
                         <div class="card__actions">
                             <form action="/cart/delete-product/<%= p._id %>" method="POST">
