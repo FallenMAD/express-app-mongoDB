@@ -1,26 +1,73 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../utils/database.js';
+import mongoDB from 'mongodb';
+import { getDb } from '../utils/database.js';
 
-export const Product = sequelize.define('Product', {
-  id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  title: {
-    type: DataTypes.STRING,
-  },
-  price: {
-    type: DataTypes.DOUBLE,
-    allowNull: false,
-  },
-  imageURL: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-  description: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
+export class Product {
+  constructor(title, price, description, imageURL, id, userId) {
+    this.title = title;
+    this.price = price;
+    this.description = description;
+    this.imageURL = imageURL;
+    this._id = id ? new mongoDB.ObjectId(id) : null;
+    this.userId = userId;
+  }
+
+  save() {
+    let dbOp;
+    const db = getDb();
+    if (this._id) {
+      dbOp = db
+        .collection('products')
+        .updateOne({ _id: this._id }, { $set: this });
+    } else {
+      dbOp = db.collection('products').insertOne(this);
+    }
+    return dbOp
+      .then((record) => {
+        console.log(record);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static fetchAll() {
+    const db = getDb();
+    return db
+      .collection('products')
+      .find()
+      .toArray()
+      .then((products) => {
+        return products;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static findOne(id) {
+    const db = getDb();
+    return db
+      .collection('products')
+      .findOne({ _id: new mongoDB.ObjectId(id) })
+      .then((product) => {
+        return product;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static deleteOne(id) {
+    const db = getDb();
+
+    return db
+      .collection('products')
+      .deleteOne({ _id: new mongoDB.ObjectId(id) })
+      .then((product) => {
+        return product;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+}
