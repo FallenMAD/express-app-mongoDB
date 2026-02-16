@@ -2,12 +2,13 @@ import mongoDB from 'mongodb';
 import { getDb } from '../utils/database.js';
 
 export class Product {
-  constructor(title, price, description, imageURL, id) {
+  constructor(title, price, description, imageURL, id, userId) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageURL = imageURL;
-    this._id = id;
+    this._id = id ? new mongoDB.ObjectId(id) : null;
+    this.userId = userId;
   }
 
   save() {
@@ -16,44 +17,57 @@ export class Product {
     if (this._id) {
       dbOp = db
         .collection('products')
-        .updateOne({ _id: new mongoDB.ObjectId(this._id) }, { $set: this });
+        .updateOne({ _id: this._id }, { $set: this });
     } else {
-      dbOp = db
-        .collection('products')
-        .insertOne(this)
+      dbOp = db.collection('products').insertOne(this);
     }
     return dbOp
-      .then(record => {
-        console.log(record)
+      .then((record) => {
+        console.log(record);
       })
-      .catch(err => {
-        console.log(err)
-      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   static fetchAll() {
     const db = getDb();
-    return db.collection('products')
+    return db
+      .collection('products')
       .find()
       .toArray()
-      .then(products => {
-        // console.log(products);
+      .then((products) => {
         return products;
       })
-      .catch(err => {
-        console.log(err)
+      .catch((err) => {
+        console.log(err);
       });
   }
 
   static findOne(id) {
     const db = getDb();
-    return db.collection('products')
+    return db
+      .collection('products')
       .findOne({ _id: new mongoDB.ObjectId(id) })
-      .then(product => {
+      .then((product) => {
         return product;
       })
-      .catch(err => {
-        console.log(err)
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static deleteOne(id) {
+    const db = getDb();
+
+    return db
+      .collection('products')
+      .deleteOne({ _id: new mongoDB.ObjectId(id) })
+      .then((product) => {
+        return product;
       })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }
