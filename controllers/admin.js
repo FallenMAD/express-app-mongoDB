@@ -1,9 +1,9 @@
 import { Product } from '../models/product.js';
+import mongoDB from 'mongodb';
 
 export const adminController = {
   getProducts(req, res, next) {
-    req.user
-      .getProducts()
+    Product.fetchAll()
       .then((result) => {
         res.render('admin/list-product', {
           products: result,
@@ -24,26 +24,32 @@ export const adminController = {
 
   postAddProduct(req, res, next) {
     const { title, imageURL, price, description } = req.body;
-    console.log(req.body);
-    req.user
-      .createProduct({
-        title,
-        price,
-        imageURL,
-        description,
-      })
+    const product = new Product(
+      title,
+      price,
+      description,
+      imageURL,
+      null,
+      req.user._id
+    );
+    product
+      .save()
       .then((result) => {
         res.redirect('/admin/list-product');
       })
-      .catch((error) => {
-        console.log(error);
+      .catch((err) => {
+        console.log(err);
       });
   },
 
   deleteProduct(req, res, next) {
     const { id } = req.params;
-    Product.destroy({ where: { id } })
+    Product.deleteOne(id)
       .then(() => {
+        return req.user.deleteItemFromCart(id);
+      })
+      .then(() => {
+        console.log('PRODUCT IS DELETED');
         res.redirect('/admin/list-product');
       })
       .catch((err) => console.log(err));
@@ -56,18 +62,16 @@ export const adminController = {
     }
 
     const { id } = req.params;
-    req.user
-      .getProducts({ where: { id } })
-      // Product.findByPk(id)
-      .then((result) => {
-        const product = result[0];
+
+    Product.findOne(id)
+      .then((product) => {
         if (!product) {
           return res.redirect('/');
         }
         res.render('admin/edit-product', {
           docTitle: 'Editing Product',
           path: req.originalUrl,
-          product: result[0],
+          product: product,
           editing: isEditMode,
         });
       })
@@ -76,17 +80,12 @@ export const adminController = {
 
   postEditProduct(req, res, next) {
     const { id, title, imageURL, price, description } = req.body;
+    const product = new Product(title, price, description, imageURL, id);
 
-    Product.findByPk(id)
-      .then((product) => {
-        product.title = title;
-        product.imageURL = imageURL;
-        product.price = price;
-        product.description = description;
-
-        return product.save();
-      })
+    product
+      .save()
       .then((result) => {
+        console.log('PRODUCT IS UPDATED');
         res.redirect('/admin/list-product');
       })
       .catch((error) => {
